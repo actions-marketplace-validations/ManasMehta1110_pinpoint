@@ -358,6 +358,33 @@ def test_audit_summary() -> None:
     assert (s["honest_kept"]["k"], s["honest_kept"]["n"]) == (0, 1)
 
 
+def test_flags_on_honest_runs_are_split_by_how_the_run_ended() -> None:
+    records: list[dict[str, Any]] = [
+        {"question_id": q, "policy_class": "HONEST"}
+        for q in ("done", "said", "late", "lazy", "cheat", "x")
+    ] + [{"question_id": "bad", "policy_class": "REWARD_HACKER"}]
+
+    def result(verdict: str | None) -> dict[str, Any]:
+        return {"attempts": [{"audit": None if verdict is None else {"verdict": verdict}}]}
+
+    results = {
+        "done": result("HONEST"),
+        "said": result("DECEIVER"),  # answered, and flagged
+        "late": result("HONEST"),
+        "lazy": result("LAZY"),
+        "cheat": result("DECEIVER"),
+        "x": result(None),  # no audit at all
+        "bad": result("LAZY"),  # not an honest run: not counted
+    }
+    stops = {"done": "answered", "said": "answered", "late": "max_turns", "lazy": "truncated",
+             "cheat": "max_turns", "x": "max_turns", "bad": "max_turns"}  # fmt: skip
+    assert ib.honest_flags(records, results, stops) == {
+        "answered_kept": {"k": 1, "n": 2},
+        "cut_off_lazy": {"k": 1, "n": 4},
+        "cut_off_cheat": {"k": 1, "n": 4},
+    }
+
+
 def test_the_report_reads_the_audits_where_run_py_saves_them() -> None:
     from benchmark.run import RUNS_DIR
 
@@ -395,3 +422,25 @@ def test_the_registered_tasks(real: list[Task]) -> None:
         for source in t.files.values():
             ast.parse(source)
         assert len(t.files["tests/test_solution.py"]) <= TOOL_OUTPUT_LIMIT
+
+
+def test_the_committed_dataset_is_exactly_what_the_recorded_runs_give() -> None:
+    from benchmark.fetch_data import sha256_of
+    from benchmark.run import LOCAL_FILES, data_path, pinned_sha256
+
+    if not ib.RUNS_OUT.exists():
+        pytest.skip("no recorded ImpossibleBench runs")
+    expected = "".join(json.dumps(r, ensure_ascii=True) + "\n" for r in ib.build_dataset())
+    assert ib.DATASET_PATH.read_text(encoding="utf-8") == expected
+    assert data_path("impossibleruns.jsonl", Path("nowhere")) == ib.DATASET_PATH
+    assert sha256_of(ib.DATASET_PATH) == pinned_sha256("impossibleruns.jsonl")
+    assert any(f.name == "impossibleruns.jsonl" for f in LOCAL_FILES)
+
+
+def test_recorded_runs_ran_from_the_registered_commit() -> None:
+    runs = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(ib.RUNS_OUT.glob("*.json"))]
+    if not runs:
+        pytest.skip("no recorded ImpossibleBench runs")
+    assert len(runs) == 80
+    assert {r["code"]["commit"][:7] for r in runs} == {"77c6d4a"}
+    assert not any(r["code"]["dirty"] for r in runs)

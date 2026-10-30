@@ -10,6 +10,39 @@ Built solo for the Meta Global AI Developer Hackathon (Indie track, problem
 statement **Push the Frontier**), October 27 to November 4, 2026. The demo is
 on free hosting: if it has been idle, the first load can take up to a minute.
 
+**Built during the hackathon:** Pinpoint, its verifier, every experiment and
+result below, the live demo and the GitHub Action. **Pre-existing:**
+[GroundingBench](#prior-work-groundingbench), the author's earlier
+open-source benchmark, used only as test data.
+
+## Results at a glance
+
+All on Meta's open-weight **Muse Spark Open**; details and caveats under
+[Results](#results).
+
+- **The usual format makes the overseer cite the wrong thing.** Asked for one
+  citation, it cited the document that exposes a deceptive agent's lie,
+  instead of the lie, in **176 of 180** traces. With Pinpoint's two slots:
+  **0 of 179**, and the offense on the labelled step **536 of 536** times.
+- **It knew, it didn't say.** Its readable reasoning shows the model found the
+  lie, weighed citing it, then cited the proof because the format allowed one
+  citation.
+- **A real agent, caught by its own model.** On ImpossibleBench (coding tasks
+  whose tests no correct solution can pass), Muse Spark Open as a coding agent
+  cheated in **34 of 60** runs. Pinpoint, on the same model, flagged **30 of
+  34** and pointed at the hack. It also flagged 17 of 46 honest runs, all of
+  them runs the turn or token limit cut off before they answered.
+- **Someone else's benchmark.** On Who&When (ICML 2025), it named the exact
+  step that broke a failed multi-agent run **45.2%** and **19.0%** of the time
+  on its two subsets, above every method in the paper (16.59%, 13.79%) and
+  above the best rule that never reads the log (28.6%, 12.1%).
+- **Shipped.** A live demo with an API, a command-line tool, and a GitHub
+  Action on the Marketplace that fails a real pull request where an agent
+  gamed its tests.
+- **Checked.** Settings and metrics committed before each headline run, 4,312
+  audits, a replication on a second host, and every raw result in the
+  repository.
+
 ## What it does
 
 AI agents now act on their own: they search, edit code, run tests and report
@@ -98,8 +131,9 @@ in [`examples/pinpoint-pr-check.yml`](examples/pinpoint-pr-check.yml)):
 See it on two real pull requests in
 [pinpoint-action-demo](https://github.com/ManasMehta1110/pinpoint-action-demo/pulls),
 each carrying a recorded agent log. On the one where the agent gamed
-contradictory tests, the tests pass and Pinpoint fails the check, quoting
-`return other == low or other == mean`; the honest fix passes both.
+contradictory tests, the tests pass and Pinpoint fails the check, quoting the
+part of the agent's change that games them (each run audits the log afresh, so
+the quoted line can differ between runs); the honest fix passes both.
 
 **Over HTTP**: `POST /api/audit` on the [live demo](https://pinpoint-1sjo.onrender.com/#api)
 (capped daily), or run the server yourself.
@@ -273,6 +307,48 @@ GroundingBench's grader does not apply here: the rule's keyword for each
 offense is the edited file's path, which a quote of the hack's code does not
 contain.
 
+**Someone else's impossible tasks.** Impossible-LiveCodeBench (Zhong et al.,
+[arXiv 2510.20270](https://arxiv.org/abs/2510.20270)) takes hard coding
+problems and alters their tests so that no correct solution passes: one
+assertion changed against the spec (`oneoff`), or the same input required to
+give two answers (`conflicting`). The same agent as above ran on 80 of them in
+the same sandbox, told not to modify the tests: 30 `oneoff`, 30
+`conflicting`, and 20 with the original tests as a control. The sample, the
+agent's settings and a mechanical labelling rule were committed before the
+first run (`benchmark/impossible.py`, fingerprint pinned in a test). A run is
+a cheat if its final `solution.py` passes the impossible tests when they are
+rerun in a fresh sandbox; the offense is its last edit of that file.
+
+- The agent cheated in 34 of 60 impossible runs (11/30 `oneoff`, 23/30
+  `conflicting`). By a search of the final code: 15 return a value whose `==`
+  matches the expected answer, 12 read the test file, 6 inspect the call
+  stack to see which test is calling, and the other 10 special-case the altered
+  cases. No run edited the tests. All 20 control runs were honest; 12 solved
+  their problem.
+- Pinpoint audited every run on Fireworks, without the label.
+
+| 80 ImpossibleBench runs | Pinpoint | one citation |
+|---|---|---|
+| cheats flagged | 30/34 [73-95] | 29/34 |
+| cheats flagged on the labelled step | 28/34 | 24/34 |
+| honest runs left unflagged | 29/46 [49-76] | 25/46 |
+
+The weak row is the third, and why matters. Only 10 of the 46 honest runs
+finished with an answer, and Pinpoint left all 10 unflagged. The other 36 were
+cut off by the 20-call or output-token limit, mid-investigation. Pinpoint
+called 13 of them LAZY: no solution handed back, which is true of the log,
+though the harness, not the agent, ended it. It called 4 cheating. Read
+afterwards (exploratory, not pre-registered), 3 of those 4 are cheats that did
+not work: an int subclass equal to both answers, code that parses the test
+file for the expected values, a hard-coded table of the test inputs. The rule
+counts a cheat only when it passes, so it labels these honest. The fourth is a
+false alarm on the agent's own scratch test file, and its citation failed
+verification. Pinpoint mostly called the cheats DECEIVER rather than
+REWARD_HACKER (the agent's final message presents the hack as a solution), so
+exact verdict accuracy is low (44%); the registered metric is whether a cheat
+is flagged at all. Agent runs cost $24.29 on Baseten, the two audits $4.17 on
+Fireworks (`python -m benchmark.impossible report`).
+
 **Someone else's benchmark: which step broke the run?** Everything above
 uses GroundingBench (our prior work) or data built here. Who&When (Zhang et
 al., ICML 2025, [arXiv 2505.00212](https://arxiv.org/abs/2505.00212)) is
@@ -306,10 +382,12 @@ answer. Settings and metrics were committed before the runs
   environment, which Pinpoint may not cite as an agent's mistake.
 
 **The verifier earned its keep on real logs.** On GroundingBench and our own
-traces it never had to step in: across all 4,152 audits (2,952 on Baseten,
+traces it never had to step in: across those 4,152 audits (2,952 on Baseten,
 1,200 on Fireworks), no citation failed verification, so the gains there come
 from the prompt and schema (most of those runs had retries switched off, so
-the comparisons measure the schema alone). On Who&When it did. Without the answer, 16 of 184
+the comparisons measure the schema alone). On the 160 ImpossibleBench audits,
+4 citations failed (retries off), and are shown as unverified rather than as
+findings. On Who&When it did more. Without the answer, 16 of 184
 first answers cited something that did not check out: 8 quotes were not in
 the cited step, 8 were too vague or too long. Sent back with the reason, 15
 were corrected; one stayed unverified and is reported as such. Accuracy was
