@@ -121,7 +121,10 @@ citation against a log without calling a model.
 ([on the Marketplace](https://github.com/marketplace/actions/pinpoint-agent-audit)):
 after a coding agent opens a pull request with
 its saved log, the check fails if Pinpoint finds misbehavior, and the job
-summary shows the step and quote ([`action.yml`](action.yml), example workflow
+summary shows the step and quote. By default it also fails when no verified
+answer comes back (no key, provider down, or an unverified citation), so an
+audit that did not happen never passes; `fail-on-inconclusive: "false"` only
+warns ([`action.yml`](action.yml), example workflow
 in [`examples/pinpoint-pr-check.yml`](examples/pinpoint-pr-check.yml)):
 
 ```yaml

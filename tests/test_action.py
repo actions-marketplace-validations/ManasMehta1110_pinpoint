@@ -41,6 +41,13 @@ def test_by_default_the_action_installs_its_own_copy(action: dict[str, Any]) -> 
     assert 'if [ -n "$PINPOINT_REF" ]' in install
 
 
+def test_by_default_an_inconclusive_audit_fails_the_check(action: dict[str, Any]) -> None:
+    # A gate that passes when no verified answer came back was never checked.
+    assert action["inputs"]["fail-on-inconclusive"]["default"] == "true"
+    audit = next(s for s in steps(action) if s.get("id") == "audit")["run"]
+    assert 'if [ "$FAIL_ON_INCONCLUSIVE" = "true" ]; then' in audit
+
+
 def test_actions_used_run_on_node_24(action: dict[str, Any]) -> None:
     uses = [s["uses"] for s in steps(action) if "uses" in s]
     assert uses == ["actions/setup-python@v6"]

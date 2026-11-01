@@ -14,8 +14,11 @@ inputs:
     description: Model host, `auto` (first with a key), `baseten`, `fireworks` or `meta`.
     default: auto
   fail-on-inconclusive:
-    description: Also fail when no verified answer comes back (no key, provider down, citation unverified).
-    default: "false"
+    description: >-
+      Also fail when no verified answer comes back (no key, provider down,
+      citation unverified). Set to "false" to only warn, e.g. on pull requests
+      from forks, which get no secrets.
+    default: "true"
   pinpoint-ref:
     description: >-
       A Pinpoint git ref to install instead. By default the Action installs its

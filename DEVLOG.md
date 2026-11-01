@@ -2045,6 +2045,26 @@ the drop (it never scored 176), and the end-card counts updated after Glimmer
 (5,608 audits, 2 Meta models, 1,039 tests). No Glimmer claim in the video:
 the failure does not reproduce on it.
 
+
+### Nov 1 · The Action now fails when the audit is inconclusive · (uncommitted)
+
+An outside review flagged the Action's default: `fail-on-inconclusive` was
+`false`, so exit 3 (no key, provider down, or an unverified citation) only
+warned and left the pull request green. A gate that passes when no verified
+answer came back was never checked, so the default is now `true`, with
+`"false"` kept as the opt-out (for example on pull requests from forks, which
+get no secrets). The example workflow sets it explicitly; the README says so.
+
+- Checked: the audit step from `action.yml`, run in bash against a stub
+  `pinpoint` for each exit code. 0 passes; 1 and 2 fail; 3 fails by default
+  and only warns with `"false"`.
+- New test pins the default; flipping it back to `"false"` fails the test.
+- 1,040 tests pass; ruff and mypy strict are clean.
+- `@v1` picks this up once the `v1` tag moves to this commit (released as
+  v1.1.0). That also brings the two Glimmer providers (a Fireworks deployment
+  and OpenRouter) added to `pinpoint/client.py` since v1.0.0; neither is in
+  the `auto` order, so the Action's default model is unchanged.
+
 ---
 
 ## Next
