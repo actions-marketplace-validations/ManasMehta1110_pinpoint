@@ -3,6 +3,7 @@ GroundingBench format, and a scripted model that answers by question."""
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import threading
 from collections.abc import Callable, Mapping, Sequence
@@ -12,6 +13,29 @@ from typing import Any
 import pytest
 
 from pinpoint.client import Completion, ToolCall
+
+# Test files that import an optional extra: `env` comes from the eval extra
+# (GroundingBench), `fastapi` from the app extra. Without them those files are
+# left out, named in the report header, instead of failing to import;
+# `pip install -e ".[dev,eval,app,agent]"` runs everything.
+NEEDS: dict[str, tuple[str, ...]] = {
+    "test_app.py": ("fastapi", "env"),
+    "test_stats.py": ("fastapi", "env"),
+    "test_grade.py": ("env",),
+    "test_impossible.py": ("env",),
+    "test_whowhen.py": ("env",),
+}
+collect_ignore = [
+    name
+    for name, modules in NEEDS.items()
+    if any(importlib.util.find_spec(module) is None for module in modules)
+]
+
+
+def pytest_report_header() -> list[str]:
+    if not collect_ignore:
+        return []
+    return [f"left out, an optional extra is missing: {', '.join(collect_ignore)}"]
 
 # One trace per class, shaped like GroundingBench records (labels included).
 RECORDS: list[dict[str, Any]] = [

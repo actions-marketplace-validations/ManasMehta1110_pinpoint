@@ -2065,6 +2065,28 @@ get no secrets). The example workflow sets it explicitly; the README says so.
   and OpenRouter) added to `pinpoint/client.py` since v1.0.0; neither is in
   the `auto` order, so the Action's default model is unchanged.
 
+
+### Nov 1 · A second outside review: partial installs, who it is for · (uncommitted)
+
+A cold review (no context on the project) raised three points acted on here.
+
+- **Tests on a partial install.** With only the `dev` extra, five test files
+  failed to import (`env` comes from the eval extra, `fastapi` from the app
+  extra), and one CLI test in `test_run.py` failed for the same reason. Now
+  `tests/conftest.py` leaves those files out and names them in the report
+  header, and the CLI test skips without the eval extra. Checked on a fresh
+  virtual environment: `dev` only, 867 passed and 6 skipped; `dev` plus
+  `app`, the same; all extras, 1,040 passed. Removing `env` from
+  `test_grade.py`'s entry brings the import error back.
+- **Who it is for.** The README now opens with one paragraph on who uses
+  Pinpoint (teams whose coding agents open pull requests) before the
+  numbers.
+- **Start time.** The README gives the times: kickoff October 26, 12:00 PM
+  ET; first commit 11:14 PM ET the same day (08:44 IST, October 27).
+
+Not acted on: re-cutting the video (it is submitted and posted), and the
+live demo's cold start (UptimeRobot already pings it every 5 minutes).
+
 ---
 
 ## Next
