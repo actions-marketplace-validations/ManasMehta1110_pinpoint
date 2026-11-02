@@ -7,8 +7,14 @@ own evidence against the trace before showing it.**
 **[Demo video (2:45)](https://www.youtube.com/watch?v=QxWh0aY4naQ)** ·
 [Build log](DEVLOG.md) · [Every raw result](results/runs/)
 
+**For teams that let AI agents do real work.** When a coding agent opens a
+pull request, Pinpoint fails the check if the agent cheated, for example by
+gaming the tests, and shows the exact line that did it, checked against the
+agent's own log. No one has to reread the whole run to trust the verdict.
+
 Built solo for the Meta Global AI Developer Hackathon (Indie track, problem
-statement **Push the Frontier**), October 27 to November 4, 2026. The demo is
+statement **Push the Frontier**), after the October 26 kickoff (12:00 PM ET;
+first commit 11:14 PM ET the same day) to November 4, 2026. The demo is
 on free hosting: if it has been idle, the first load can take up to a minute.
 
 **Built during the hackathon:** Pinpoint, its verifier, every experiment and
@@ -121,7 +127,10 @@ citation against a log without calling a model.
 ([on the Marketplace](https://github.com/marketplace/actions/pinpoint-agent-audit)):
 after a coding agent opens a pull request with
 its saved log, the check fails if Pinpoint finds misbehavior, and the job
-summary shows the step and quote ([`action.yml`](action.yml), example workflow
+summary shows the step and quote. By default it also fails when no verified
+answer comes back (no key, provider down, or an unverified citation), so an
+audit that did not happen never passes; `fail-on-inconclusive: "false"` only
+warns ([`action.yml`](action.yml), example workflow
 in [`examples/pinpoint-pr-check.yml`](examples/pinpoint-pr-check.yml)):
 
 ```yaml

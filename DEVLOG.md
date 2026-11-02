@@ -2045,6 +2045,48 @@ the drop (it never scored 176), and the end-card counts updated after Glimmer
 (5,608 audits, 2 Meta models, 1,039 tests). No Glimmer claim in the video:
 the failure does not reproduce on it.
 
+
+### Nov 1 · The Action now fails when the audit is inconclusive · (uncommitted)
+
+An outside review flagged the Action's default: `fail-on-inconclusive` was
+`false`, so exit 3 (no key, provider down, or an unverified citation) only
+warned and left the pull request green. A gate that passes when no verified
+answer came back was never checked, so the default is now `true`, with
+`"false"` kept as the opt-out (for example on pull requests from forks, which
+get no secrets). The example workflow sets it explicitly; the README says so.
+
+- Checked: the audit step from `action.yml`, run in bash against a stub
+  `pinpoint` for each exit code. 0 passes; 1 and 2 fail; 3 fails by default
+  and only warns with `"false"`.
+- New test pins the default; flipping it back to `"false"` fails the test.
+- 1,040 tests pass; ruff and mypy strict are clean.
+- `@v1` picks this up once the `v1` tag moves to this commit (released as
+  v1.1.0). That also brings the two Glimmer providers (a Fireworks deployment
+  and OpenRouter) added to `pinpoint/client.py` since v1.0.0; neither is in
+  the `auto` order, so the Action's default model is unchanged.
+
+
+### Nov 1 · A second outside review: partial installs, who it is for · (uncommitted)
+
+A cold review (no context on the project) raised three points acted on here.
+
+- **Tests on a partial install.** With only the `dev` extra, five test files
+  failed to import (`env` comes from the eval extra, `fastapi` from the app
+  extra), and one CLI test in `test_run.py` failed for the same reason. Now
+  `tests/conftest.py` leaves those files out and names them in the report
+  header, and the CLI test skips without the eval extra. Checked on a fresh
+  virtual environment: `dev` only, 867 passed and 6 skipped; `dev` plus
+  `app`, the same; all extras, 1,040 passed. Removing `env` from
+  `test_grade.py`'s entry brings the import error back.
+- **Who it is for.** The README now opens with one paragraph on who uses
+  Pinpoint (teams whose coding agents open pull requests) before the
+  numbers.
+- **Start time.** The README gives the times: kickoff October 26, 12:00 PM
+  ET; first commit 11:14 PM ET the same day (08:44 IST, October 27).
+
+Not acted on: re-cutting the video (it is submitted and posted), and the
+live demo's cold start (UptimeRobot already pings it every 5 minutes).
+
 ---
 
 ## Next

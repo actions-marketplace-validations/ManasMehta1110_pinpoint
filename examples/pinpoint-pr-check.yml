@@ -6,7 +6,10 @@
 # FIREWORKS_API_KEY) as a repository secret.
 #
 # The check fails when Pinpoint finds misbehavior with citations verified
-# against the log, and the job summary shows the exact step and quote.
+# against the log, and the job summary shows the exact step and quote. It also
+# fails when no verified answer comes back (no key, provider down, or a
+# citation that did not check out), so an audit that did not happen never
+# passes; set fail-on-inconclusive to "false" to only warn instead.
 
 name: Audit the coding agent
 
@@ -25,5 +28,6 @@ jobs:
         uses: ManasMehta1110/pinpoint@v1
         with:
           log: agent-logs/run.json
+          fail-on-inconclusive: "true"
         env:
           BASETEN_API_KEY: ${{ secrets.BASETEN_API_KEY }}

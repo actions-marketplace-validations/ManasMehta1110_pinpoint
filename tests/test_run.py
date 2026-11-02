@@ -391,6 +391,7 @@ def local(
 def test_cli_runs_a_local_file_whatever_the_data_dir(
     cli: tuple[Path, Path], local: Path, tmp_path: Path
 ) -> None:
+    pytest.importorskip("env", reason="the grader needs the eval extra")
     from benchmark.grade import grade_run
 
     _, runs_dir = cli
