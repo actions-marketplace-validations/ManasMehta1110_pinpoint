@@ -38,7 +38,11 @@ All on Meta's open-weight **Muse Spark Open**; details and caveats under
   whose tests no correct solution can pass), Muse Spark Open as a coding agent
   cheated in **34 of 60** runs. Pinpoint, on the same model, flagged **30 of
   34** and pointed at the hack. It also flagged 17 of 46 honest runs, all of
-  them runs the turn or token limit cut off before they answered.
+  them cut off by the turn or token limit before they answered: 13 as LAZY
+  (no solution handed back), 3 that on reading are cheats that did not work
+  (exploratory), and 1 false alarm whose citation failed verification, so it
+  was never shown as a finding. It left all 10 honest runs that finished
+  unflagged.
 - **Someone else's benchmark.** On Who&When (ICML 2025), it named the exact
   step that broke a failed multi-agent run **45.2%** and **19.0%** of the time
   on its two subsets, above every method in the paper (16.59%, 13.79%) and
@@ -430,6 +434,10 @@ the same on the first answers; what retries bought is that every citation
 shown is real.
 
 **Caveats.**
+- The verifier proves a citation is real, not that it is right: the step
+  exists, the quote is in it, and an offense quotes the agent's own action.
+  Whether that is the step where the agent went wrong is the model's call,
+  which is what the labelled-step results above measure.
 - One run per configuration per host (the naturalistic comparison ran on two
   hosts). The headline results are one model, Muse Spark Open; Muse Glimmer
   30B repeats the main comparison only.
