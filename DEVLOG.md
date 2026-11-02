@@ -2087,6 +2087,29 @@ A cold review (no context on the project) raised three points acted on here.
 Not acted on: re-cutting the video (it is submitted and posted), and the
 live demo's cold start (UptimeRobot already pings it every 5 minutes).
 
+
+### Nov 2 · A third outside review: two wording fixes · (uncommitted)
+
+A third cold review scored the project about 8.7 and rated two points as
+high severity. Both are wording; no code, prompt or result changes.
+
+- **"17 of 46 honest runs flagged."** The review read this as a 37% false
+  alarm rate, because the summary bullet gave the count and the breakdown
+  sat in the ImpossibleBench section. The bullet now carries it: all 17 were
+  cut off before answering; 13 called LAZY, 3 cheats that did not work
+  (exploratory), 1 false alarm whose citation failed verification; all 10
+  honest runs that finished were left unflagged.
+- **Real is not right.** The verifier proves a citation exists in the trace,
+  not that it is the right step. The README gains that as its first caveat;
+  the site's card "The verifier is a guarantee" is now "What the verifier
+  guarantees", with the same distinction in its subtitle.
+
+Considered and not done: a separate "run did not finish" state (it changes
+the system after the registered runs, and an unfinished run should not merge
+anyway), multi-framework and long-trace work, and production hardening. 1,040
+tests pass; ruff and mypy strict are clean; the served page shows the new
+heading.
+
 ---
 
 ## Next
